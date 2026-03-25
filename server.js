@@ -8,24 +8,17 @@ const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
 
 const app = express();
-const PORT = 3000;
 
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-
-// මේක කලින් තිබ්බ එක වෙනුවට පේස්ට් කරන්න
-const dbURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/taskDB';
-
-mongoose.connect(dbURI)
-  .then(() => console.log('MongoDB Connected...'))
-  .catch(err => console.log('Database Connection Error:', err));
 
 app.use(session({
     secret: 'mysecretkey',
     resave: false,
     saveUninitialized: false
 }));
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -98,6 +91,7 @@ app.post('/delete-task', async (req, res) => {
 });
 
 app.get('/signup', (req, res) => res.render('signup'));
+
 app.post('/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     await new User({ username: req.body.username, password: hashedPassword }).save();
@@ -106,7 +100,6 @@ app.post('/signup', async (req, res) => {
 
 app.get('/login', (req, res) => res.render('login'));
 app.post('/login', passport.authenticate('local', { successRedirect: '/', failureRedirect: '/login' }));
-
 app.get('/logout', (req, res) => { req.logout(() => res.redirect('/login')); });
 
 // Email Reminder (Every morning at 8:00 AM)
@@ -129,8 +122,9 @@ cron.schedule('0 8 * * *', async () => {
     }
 });
 
-// Database එකට කෙලින්ම ලින්ක් එක මෙතන දෙමු (No Environment Variables)
-const dbURI = "mongodb+srv://admin:Janidu123@cluster0.xxxxx.mongodb.net/taskDB?retryWrites=true&w=majority";
+// --- DATABASE CONNECTION & SERVER START ---
+// ඔයාගේ ඇත්තම Password එක මෙතන දාන්න. Password එකේ @ තියෙනවා නම් %40 කියලා ලියන්න.
+const dbURI = "mongodb+srv://admin:Janidu123@cluster0.zpsu2.mongodb.net/taskDB?retryWrites=true&w=majority";
 
 mongoose.connect(dbURI)
   .then(() => console.log("MongoDB Connected!"))
@@ -138,5 +132,5 @@ mongoose.connect(dbURI)
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+    console.log(`Server running on ${PORT}`);
 });
