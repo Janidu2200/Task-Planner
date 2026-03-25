@@ -14,10 +14,12 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// MongoDB Connection
-mongoose.connect('mongodb://127.0.0.1:27017/taskDB')
-    .then(() => console.log('Connected to Mongo DB! ✅'))
-    .catch(err => console.error('Database Error:', err));
+// මේක කලින් තිබ්බ එක වෙනුවට පේස්ට් කරන්න
+const dbURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/taskDB';
+
+mongoose.connect(dbURI)
+  .then(() => console.log('MongoDB Connected...'))
+  .catch(err => console.log('Database Connection Error:', err));
 
 app.use(session({
     secret: 'mysecretkey',
