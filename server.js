@@ -129,8 +129,22 @@ cron.schedule('0 8 * * *', async () => {
     }
 });
 
-const dbURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/taskDB';
+// --- DATABASE CONNECTION START ---
+// ඔයා MongoDB Atlas එකෙන් කොපි කරගත්ත ලින්ක් එක මෙතනට දාන්න.
+// <password> කියන තැන අයින් කරලා ඔයාගේ ඇත්තම Password එක දාන්න.
+const dbURI = "mongodb+srv://admin:ඔයාගේ_Password_එක@cluster0.xxxxx.mongodb.net/taskDB?retryWrites=true&w=majority";
 
 mongoose.connect(dbURI)
-  .then(() => console.log('MongoDB Connected...'))
-  .catch(err => console.log('MongoDB Connection Error: ', err));
+  .then(() => {
+    console.log("MongoDB Connected Successfully!");
+  })
+  .catch((err) => {
+    console.log("MongoDB Connection Error: ", err);
+  });
+// --- DATABASE CONNECTION END ---
+
+// Vercel එකට වැඩ කරන්න PORT එක මෙහෙම තියෙන්නම ඕනේ
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
