@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Task Manager</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        /* Edit Modal එකට අවශ්‍ය CSS */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 25px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 450px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Welcome, <%= user.username %>! 👋</h2>
+            <a href="/logout" class="btn btn-outline-danger shadow-sm">Logout</a>
+        </div>
+
+        <div class="card card-body mb-4 shadow-sm border-0" style="border-radius: 20px;">
+            <form action="/add-task" method="POST">
+                <input type="text" name="taskName" class="form-control mb-2" placeholder="What needs to be done?" required style="border-radius: 10px;">
+                <div class="row">
+                    <div class="col">
+                        <input type="date" name="dueDate" class="form-control" style="border-radius: 10px;">
+                    </div>
+                    <div class="col">
+                        <select name="category" class="form-control" style="border-radius: 10px;">
+                            <option value="General">General</option>
+                            <option value="Work">Work</option>
+                            <option value="Personal">Personal</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block mt-3 shadow" style="border-radius: 10px;">Add Task</button>
+            </form>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-8 mb-2">
+                <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="🔍 Search tasks..." onkeyup="filterTasks()" style="border-radius: 15px;">
+            </div>
+            <div class="col-md-4">
+                <select id="categoryFilter" class="form-control shadow-sm" onchange="filterTasks()" style="border-radius: 15px;">
+                    <option value="all">All Categories</option>
+                    <option value="General">General</option>
+                    <option value="Work">Work</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Urgent">Urgent</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table bg-white shadow-sm rounded-lg overflow-hidden">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Task</th>
+                        <th>Category</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="taskTable">
+                    <% taskList.forEach(task => { %>
+                        <tr class="task-row <%= task.completed ? 'table-secondary' : '' %>" data-category="<%= task.category %>">
+                            <td class="task-text <%= task.completed ? 'text-muted' : '' %>" style="<%= task.completed ? 'text-decoration: line-through;' : '' %>; vertical-align: middle;">
+                                <%= task.text %>
+                            </td>
+                            <td style="vertical-align: middle;">
+                                <span class="badge badge-pill badge-info px-3 py-2"><%= task.category %></span>
+                            </td>
+                            <td class="text-center" style="vertical-align: middle;">
+                                <div class="btn-group">
+                                    <form action="/toggle-task" method="POST" class="mr-1">
+                                        <input type="hidden" name="id" value="<%= task._id %>">
+                                        <button class="btn btn-sm btn-success shadow-sm">Check</button>
+                                    </form>
+                                    
+                                    <button class="btn btn-sm btn-warning mr-1 shadow-sm text-white" 
+                                            onclick="openEditModal('<%= task._id %>', '<%= task.text %>')">
+                                        Edit
+                                    </button>
+
+                                    <form action="/delete-task" method="POST">
+                                        <input type="hidden" name="id" value="<%= task._id %>">
+                                        <button class="btn btn-sm btn-danger shadow-sm">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content border-0">
+            <h4 class="mb-4">Edit Task 📝</h4>
+            <form action="/edit-task" method="POST">
+                <input type="hidden" name="id" id="editTaskId">
+                <div class="form-group">
+                    <label>Task Description</label>
+                    <input type="text" name="newText" id="editTaskText" class="form-control" required style="border-radius: 10px;">
+                </div>
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="button" class="btn btn-light mr-2" onclick="closeEditModal()" style="border-radius: 10px;">Cancel</button>
+                    <button type="submit" class="btn btn-primary shadow" style="border-radius: 10px;">Update Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Search & Filter Logic
+        function filterTasks() {
+            let input = document.getElementById('searchInput').value.toLowerCase();
+            let category = document.getElementById('categoryFilter').value;
+            let rows = document.querySelectorAll('.task-row');
+
+            rows.forEach(row => {
+                let text = row.querySelector('.task-text').innerText.toLowerCase();
+                let taskCat = row.getAttribute('data-category');
+                let matchesSearch = text.includes(input);
+                let matchesCategory = (category === 'all' || taskCat === category);
+                row.style.display = (matchesSearch && matchesCategory) ? "" : "none";
+            });
+        }
+
+        // Edit Modal Logic
+        function openEditModal(id, text) {
+            document.getElementById('editTaskId').value = id;
+            document.getElementById('editTaskText').value = text;
+            document.getElementById('editModal').style.display = "block";
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = "none";
+        }
+
+        // Modal එක වහන්න (පිටත Click කළොත්)
+        window.onclick = function(event) {
+            let modal = document.getElementById('editModal');
+            if (event.target == modal) {
+                closeEditModal();
+            }
+        }
+    </script>
+</body>
+</html>
