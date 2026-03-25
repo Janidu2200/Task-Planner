@@ -130,5 +130,7 @@ cron.schedule('0 8 * * *', async () => {
 });
 
 const dbURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/taskDB';
-mongoose.connect(dbURI);
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+mongoose.connect(dbURI)
+  .then(() => console.log('MongoDB Connected...'))
+  .catch(err => console.log('MongoDB Connection Error: ', err));
