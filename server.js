@@ -10,6 +10,8 @@ const bcrypt = require('bcryptjs');
 const app = express();
 
 app.set('view engine', 'ejs');
+const path = require('path');
+app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
@@ -124,6 +126,7 @@ cron.schedule('0 8 * * *', async () => {
 
 // --- DATABASE CONNECTION & SERVER START ---
 // ඔයාගේ ඇත්තම Password එක මෙතන දාන්න. Password එකේ @ තියෙනවා නම් %40 කියලා ලියන්න.
+// මේ පේළිය හරියටම මෙහෙම තියෙනවාද බලන්න (වැඩිපුර අකුරු හෝ ඉඩක් නැතිව)
 const dbURI = "mongodb+srv://admin:Janidu123@cluster0.zpsu2.mongodb.net/taskDB?retryWrites=true&w=majority";
 
 mongoose.connect(dbURI)
